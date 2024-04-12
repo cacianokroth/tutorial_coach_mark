@@ -8,6 +8,17 @@ import 'package:tutorial_coach_mark/src/target/target_position.dart';
 import 'package:tutorial_coach_mark/src/util.dart';
 import 'package:tutorial_coach_mark/src/widgets/animated_focus_light.dart';
 
+typedef TutorialCoachMarkNavigationBarBuilder = Widget Function(
+  BuildContext context,
+  TutorialCoachMarkController controller,
+  TargetFocus? currentTarget,
+);
+
+typedef OnTutorialCoachMarkFocusChanged = FutureOr Function(
+  TargetFocus? previous,
+  TargetFocus current,
+);
+
 class TutorialCoachMarkWidget extends StatefulWidget {
   const TutorialCoachMarkWidget({
     Key? key,
@@ -17,48 +28,41 @@ class TutorialCoachMarkWidget extends StatefulWidget {
     this.clickTarget,
     this.onClickTargetWithTapPosition,
     this.clickOverlay,
-    this.alignSkip = Alignment.bottomRight,
-    this.textSkip = "SKIP",
     this.onClickSkip,
     this.colorShadow = Colors.black,
     this.opacityShadow = 0.8,
-    this.textStyleSkip = const TextStyle(color: Colors.white),
-    this.hideSkip = false,
     this.focusAnimationDuration,
     this.unFocusAnimationDuration,
     this.pulseAnimationDuration,
     this.pulseVariation,
     this.pulseEnable = true,
-    this.skipWidget,
     this.rootOverlay = false,
-    this.showSkipInLastTarget = false,
     this.imageFilter,
+    this.navigationBarBuilder,
+    this.onFocusChanged,
+    this.shouldScrollToTarget,
   })  : assert(targets.length > 0),
         super(key: key);
 
   final List<TargetFocus> targets;
   final FutureOr Function(TargetFocus)? clickTarget;
-  final FutureOr Function(TargetFocus, TapDownDetails)?
-      onClickTargetWithTapPosition;
+  final OnTutorialCoachMarkFocusChanged? onFocusChanged;
+  final FutureOr Function(TargetFocus, TapDownDetails)? onClickTargetWithTapPosition;
   final FutureOr Function(TargetFocus)? clickOverlay;
   final Function()? finish;
   final Color colorShadow;
   final double opacityShadow;
   final double paddingFocus;
   final Function()? onClickSkip;
-  final AlignmentGeometry alignSkip;
-  final String textSkip;
-  final TextStyle textStyleSkip;
-  final bool hideSkip;
   final Duration? focusAnimationDuration;
   final Duration? unFocusAnimationDuration;
   final Duration? pulseAnimationDuration;
   final Tween<double>? pulseVariation;
   final bool pulseEnable;
-  final Widget? skipWidget;
   final bool rootOverlay;
-  final bool showSkipInLastTarget;
+  final bool? shouldScrollToTarget;
   final ImageFilter? imageFilter;
+  final TutorialCoachMarkNavigationBarBuilder? navigationBarBuilder;
 
   @override
   TutorialCoachMarkWidgetState createState() => TutorialCoachMarkWidgetState();
@@ -90,16 +94,11 @@ class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
             pulseEnable: widget.pulseEnable,
             rootOverlay: widget.rootOverlay,
             imageFilter: widget.imageFilter,
-            clickTarget: (target) {
-              return widget.clickTarget?.call(target);
-            },
-            clickTargetWithTapPosition: (target, tapDetails) {
-              return widget.onClickTargetWithTapPosition
-                  ?.call(target, tapDetails);
-            },
-            clickOverlay: (target) {
-              return widget.clickOverlay?.call(target);
-            },
+            onFocusChanged: widget.onFocusChanged,
+            clickTarget: widget.clickTarget,
+            clickTargetWithTapPosition: widget.onClickTargetWithTapPosition,
+            clickOverlay: widget.clickOverlay,
+            shouldScrollToTarget: widget.shouldScrollToTarget,
             focus: (target) {
               setState(() {
                 currentTarget = target;
@@ -117,7 +116,18 @@ class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
             duration: const Duration(milliseconds: 300),
             child: _buildContents(),
           ),
-          _buildSkip()
+          if (widget.navigationBarBuilder != null)
+            Visibility(
+              visible: showContent,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: widget.navigationBarBuilder!(
+                  context,
+                  this,
+                  currentTarget,
+                ),
+              ),
+            )
         ],
       ),
     );
@@ -154,9 +164,7 @@ class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
     double haloHeight;
 
     if (currentTarget!.shape == ShapeLightFocus.Circle) {
-      haloWidth = target.size.width > target.size.height
-          ? target.size.width
-          : target.size.height;
+      haloWidth = target.size.width > target.size.height ? target.size.width : target.size.height;
       haloHeight = haloWidth;
     } else {
       haloWidth = target.size.width;
@@ -187,8 +195,7 @@ class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
             weight = MediaQuery.of(context).size.width;
             left = 0;
             top = null;
-            bottom = haloHeight +
-                (MediaQuery.of(context).size.height - positioned.dy);
+            bottom = haloHeight + (MediaQuery.of(context).size.height - positioned.dy);
           }
           break;
         case ContentAlign.left:
@@ -227,8 +234,7 @@ class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
           width: weight,
           child: Padding(
             padding: i.padding,
-            child: i.builder?.call(context, this) ??
-                (i.child ?? const SizedBox.shrink()),
+            child: i.builder?.call(context, this) ?? (i.child ?? const SizedBox.shrink()),
           ),
         ),
       );
@@ -236,43 +242,6 @@ class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
 
     return Stack(
       children: children,
-    );
-  }
-
-  Widget _buildSkip() {
-    bool isLastTarget = false;
-
-    if (currentTarget != null) {
-      isLastTarget =
-          widget.targets.indexOf(currentTarget!) == widget.targets.length - 1;
-    }
-
-    if (widget.hideSkip || (isLastTarget && !widget.showSkipInLastTarget)) {
-      return const SizedBox.shrink();
-    }
-
-    return Align(
-      alignment: currentTarget?.alignSkip ?? widget.alignSkip,
-      child: SafeArea(
-        child: AnimatedOpacity(
-          opacity: showContent ? 1 : 0,
-          duration: const Duration(milliseconds: 300),
-          child: InkWell(
-            onTap: skip,
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: IgnorePointer(
-                ignoringSemantics: false,
-                child: widget.skipWidget ??
-                    Text(
-                      widget.textSkip,
-                      style: widget.textStyleSkip,
-                    ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 

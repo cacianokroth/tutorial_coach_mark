@@ -16,16 +16,12 @@ export 'package:tutorial_coach_mark/src/util.dart';
 class TutorialCoachMark {
   final List<TargetFocus> targets;
   final FutureOr<void> Function(TargetFocus)? onClickTarget;
-  final FutureOr<void> Function(TargetFocus, TapDownDetails)?
-      onClickTargetWithTapPosition;
+  final OnTutorialCoachMarkFocusChanged? onFocusChanged;
+  final FutureOr<void> Function(TargetFocus, TapDownDetails)? onClickTargetWithTapPosition;
   final FutureOr<void> Function(TargetFocus)? onClickOverlay;
   final Function()? onFinish;
   final double paddingFocus;
   final Function()? onSkip;
-  final AlignmentGeometry alignSkip;
-  final String textSkip;
-  final TextStyle textStyleSkip;
-  final bool hideSkip;
   final Color colorShadow;
   final double opacityShadow;
   final GlobalKey<TutorialCoachMarkWidgetState> _widgetKey = GlobalKey();
@@ -33,14 +29,15 @@ class TutorialCoachMark {
   final Duration unFocusAnimationDuration;
   final Duration pulseAnimationDuration;
   final bool pulseEnable;
-  final Widget? skipWidget;
-  final bool showSkipInLastTarget;
   final ImageFilter? imageFilter;
+  final bool? shouldScrollToTarget;
+  final TutorialCoachMarkNavigationBarBuilder? navigationBarBuilder;
 
   OverlayEntry? _overlayEntry;
 
   TutorialCoachMark({
     required this.targets,
+    this.navigationBarBuilder,
     this.colorShadow = Colors.black,
     this.onClickTarget,
     this.onClickTargetWithTapPosition,
@@ -48,18 +45,14 @@ class TutorialCoachMark {
     this.onFinish,
     this.paddingFocus = 10,
     this.onSkip,
-    this.alignSkip = Alignment.bottomRight,
-    this.textSkip = "SKIP",
-    this.textStyleSkip = const TextStyle(color: Colors.white),
-    this.hideSkip = false,
     this.opacityShadow = 0.8,
     this.focusAnimationDuration = const Duration(milliseconds: 600),
     this.unFocusAnimationDuration = const Duration(milliseconds: 600),
     this.pulseAnimationDuration = const Duration(milliseconds: 500),
     this.pulseEnable = true,
-    this.skipWidget,
-    this.showSkipInLastTarget = true,
+    this.onFocusChanged,
     this.imageFilter,
+    this.shouldScrollToTarget,
   }) : assert(opacityShadow >= 0 && opacityShadow <= 1);
 
   OverlayEntry _buildOverlay({bool rootOverlay = false}) {
@@ -73,11 +66,6 @@ class TutorialCoachMark {
           clickOverlay: onClickOverlay,
           paddingFocus: paddingFocus,
           onClickSkip: skip,
-          alignSkip: alignSkip,
-          skipWidget: skipWidget,
-          textSkip: textSkip,
-          textStyleSkip: textStyleSkip,
-          hideSkip: hideSkip,
           colorShadow: colorShadow,
           opacityShadow: opacityShadow,
           focusAnimationDuration: focusAnimationDuration,
@@ -86,8 +74,10 @@ class TutorialCoachMark {
           pulseEnable: pulseEnable,
           finish: finish,
           rootOverlay: rootOverlay,
-          showSkipInLastTarget: showSkipInLastTarget,
           imageFilter: imageFilter,
+          navigationBarBuilder: navigationBarBuilder,
+          onFocusChanged: onFocusChanged,
+          shouldScrollToTarget: shouldScrollToTarget,
         );
       },
     );
