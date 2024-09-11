@@ -16,8 +16,7 @@ export 'package:tutorial_coach_mark/src/util.dart';
 class TutorialCoachMark {
   final List<TargetFocus> targets;
   final FutureOr<void> Function(TargetFocus)? onClickTarget;
-  final FutureOr<void> Function(TargetFocus, TapDownDetails)?
-      onClickTargetWithTapPosition;
+  final FutureOr<void> Function(TargetFocus, TapDownDetails)? onClickTargetWithTapPosition;
   final FutureOr<void> Function(TargetFocus)? onClickOverlay;
   final Function()? onFinish;
   final double paddingFocus;
@@ -41,6 +40,7 @@ class TutorialCoachMark {
   final ImageFilter? imageFilter;
   final String? backgroundSemanticLabel;
   final int initialFocus;
+  final TutorialCoachMarkNavigationBarBuilder? navigationBarBuilder;
 
   OverlayEntry? _overlayEntry;
 
@@ -68,6 +68,7 @@ class TutorialCoachMark {
     this.imageFilter,
     this.initialFocus = 0,
     this.backgroundSemanticLabel,
+    this.navigationBarBuilder,
   }) : assert(opacityShadow >= 0 && opacityShadow <= 1);
 
   OverlayEntry _buildOverlay({bool rootOverlay = false}) {
@@ -99,6 +100,7 @@ class TutorialCoachMark {
           imageFilter: imageFilter,
           initialFocus: initialFocus,
           backgroundSemanticLabel: backgroundSemanticLabel,
+          navigationBarBuilder: navigationBarBuilder,
         );
       },
     );
