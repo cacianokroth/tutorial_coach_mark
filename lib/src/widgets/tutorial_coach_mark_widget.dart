@@ -11,7 +11,7 @@ import 'package:tutorial_coach_mark/src/widgets/animated_focus_light.dart';
 typedef TutorialCoachMarkNavigationBarBuilder = Widget Function(
   BuildContext context,
   TutorialCoachMarkController controller,
-  TargetFocus? currentTarget,
+  TargetFocus currentTarget,
 );
 
 typedef OnTutorialCoachMarkFocusChanged = FutureOr Function(
@@ -68,8 +68,7 @@ class TutorialCoachMarkWidget extends StatefulWidget {
   TutorialCoachMarkWidgetState createState() => TutorialCoachMarkWidgetState();
 }
 
-class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
-    implements TutorialCoachMarkController {
+class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget> implements TutorialCoachMarkController {
   final GlobalKey<AnimatedFocusLightState> _focusLightKey = GlobalKey();
   bool showContent = false;
   TargetFocus? currentTarget;
@@ -116,7 +115,7 @@ class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
             duration: const Duration(milliseconds: 300),
             child: _buildContents(),
           ),
-          if (widget.navigationBarBuilder != null)
+          if (widget.navigationBarBuilder != null && currentTarget != null)
             Visibility(
               visible: showContent,
               child: Align(
@@ -124,7 +123,7 @@ class TutorialCoachMarkWidgetState extends State<TutorialCoachMarkWidget>
                 child: widget.navigationBarBuilder!(
                   context,
                   this,
-                  currentTarget,
+                  currentTarget!,
                 ),
               ),
             )

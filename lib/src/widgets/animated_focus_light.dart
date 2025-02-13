@@ -7,10 +7,8 @@ import 'package:tutorial_coach_mark/src/clipper/circle_clipper.dart';
 import 'package:tutorial_coach_mark/src/clipper/rect_clipper.dart';
 import 'package:tutorial_coach_mark/src/paint/light_paint.dart';
 import 'package:tutorial_coach_mark/src/paint/light_paint_rect.dart';
-import 'package:tutorial_coach_mark/src/target/target_focus.dart';
-import 'package:tutorial_coach_mark/src/target/target_position.dart';
-import 'package:tutorial_coach_mark/src/util.dart';
 import 'package:tutorial_coach_mark/src/widgets/tutorial_coach_mark_widget.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class AnimatedFocusLight extends StatefulWidget {
   final List<TargetFocus> targets;
@@ -59,13 +57,12 @@ class AnimatedFocusLight extends StatefulWidget {
         super(key: key);
 
   @override
-  // ignore: no_logic_in_create_state
   AnimatedFocusLightState createState() =>
+      // ignore: no_logic_in_create_state
       pulseEnable ? AnimatedPulseFocusLightState() : AnimatedStaticFocusLightState();
 }
 
-abstract class AnimatedFocusLightState extends State<AnimatedFocusLight>
-    with TickerProviderStateMixin {
+abstract class AnimatedFocusLightState extends State<AnimatedFocusLight> with TickerProviderStateMixin {
   final borderRadiusDefault = 10.0;
   final defaultFocusAnimationDuration = const Duration(milliseconds: 600);
   late AnimationController _controller;
@@ -86,9 +83,7 @@ abstract class AnimatedFocusLightState extends State<AnimatedFocusLight>
     _targetFocus = widget.targets[_currentFocus];
     _controller = AnimationController(
       vsync: this,
-      duration: _targetFocus.focusAnimationDuration ??
-          widget.focusAnimationDuration ??
-          defaultFocusAnimationDuration,
+      duration: _targetFocus.focusAnimationDuration ?? widget.focusAnimationDuration ?? defaultFocusAnimationDuration,
     )..addStatusListener(_listener);
 
     _curvedAnimation = CurvedAnimation(
@@ -132,16 +127,17 @@ abstract class AnimatedFocusLightState extends State<AnimatedFocusLight>
     await widget.onFocusChanged?.call(_targetFocus, widget.targets[_currentFocus]);
 
     _targetFocus = widget.targets[_currentFocus];
-    _controller.duration = _targetFocus.focusAnimationDuration ??
-        widget.focusAnimationDuration ??
-        defaultFocusAnimationDuration;
+    _controller.duration =
+        _targetFocus.focusAnimationDuration ?? widget.focusAnimationDuration ?? defaultFocusAnimationDuration;
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       if (widget._shouldScrollToTarget && _targetFocus.keyTarget != null) {
         await Scrollable.ensureVisible(
           _targetFocus.keyTarget!.currentContext!,
-          duration: const Duration(milliseconds: 300),
-          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+          duration: const Duration(milliseconds: 500),
+          alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+          curve: Curves.easeInOut,
+          alignment: .75,
         );
       }
 
